@@ -5,7 +5,7 @@ model.ode: The ode file that can be run in XPP/AUTO dynamical system analysis an
 model.py: The python code that defines the parameter values and ode function that defines the mathematical formulations given in the manuscript.  
 figure2.py: The file uses model.py and generates the Figure 2 given in the mansucript.  
 
-The model has 8 dynamical variables:  
+The model has 8 variables:  
 The independent variable is time 't' and is in days.  
 g: plasma glucose (mg/dl),  
 i: plasma nsulin (uU/ml),  
