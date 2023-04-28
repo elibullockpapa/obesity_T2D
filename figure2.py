@@ -15,8 +15,6 @@ cols=['royalblue','limegreen','magenta']
 incilab=[round(i*100) for i in incivals]
 vn=[r'G ($mg/dl$)', r'I ($\mu U/ml$)', r'FFA ($\mu mol/l$)', r'S$_i$ ($ml/ \mu U/day$)',r'$\beta$ ($mg$)',r'$\sigma$ ($\mu U/mg/day$)', r'$\theta$', 'BMI ($kg/m^2$)' ]
 
-plt.close('all')
-
 fig5=plt.figure(12,tight_layout=False)
 axs=fig5.subplots(3,3)
 axs=axs.ravel()
