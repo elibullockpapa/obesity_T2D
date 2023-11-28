@@ -1,5 +1,8 @@
 # obesity_T2D
-The codes for the computational model publsihed in 'Data-driven models show that metabolic profile and progression dynamics of obesity and diabetes determine the success of remission through weight loss'.
+The codes for the computational model that was published in the paper titled 'A data-driven computational model for obesity-driven diabetes onset and remission through weight loss' (https://doi.org/10.1016/j.isci.2023.108324).
+
+Yildirim, V., Sheraton, V.M., Brands, R., Crielaard, L., Quax, R., van Riel, N.A.W., Stronks, K., Nicolaou, M., and Sloot, P.M.A. (2023). A data-driven computational model for obesity-driven diabetes onset and remission through weight loss. iScience 26, 108324. 10.1016/j.isci.2023.108324.
+
 
 model.ode: The ode file that can be run in XPP/AUTO dynamical system analysis ans simulation toolbox (https://sites.pitt.edu/~phase/bard/bardware/xpp/xpp.html)  
 model.py: The python code that defines the parameter values and ode function that defines the mathematical formulations given in the manuscript.  
