@@ -1,3 +1,5 @@
+# model.ode
+
 # This file can be run in XPP/AUTO dynamical system analysis ans simulation toolbox (https://sites.pitt.edu/~phase/bard/bardware/xpp/xpp.html)
 # The model has 8 variables: 
 # The independent variable is time 't' and is in days.
