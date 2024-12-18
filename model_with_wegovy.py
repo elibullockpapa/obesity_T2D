@@ -79,18 +79,66 @@ pars["ffa_ramax"] = 1.106  # Maximum ratio of FFA release to FFA uptake (dimensi
 pars["lp1"] = 100  # Lower physiological limit for some parameter (unit)
 pars["lp2"] = 125  # Upper physiological limit for some parameter (unit)
 pars["tau_wsc"] = 1  # Scaling constant for weight change dynamics under different conditions (dimensionless)
+pars["intake_i"] = 2500  # Initial daily caloric intake (calories/day)
 
 pars_l = list(pars.values())  # Convert dictionary values to a list
 pars_npa = np.array(pars_l)  # Convert list to numpy array for computational efficiency
 pars_n = list(pars.keys())  # Extract dictionary keys for reference
 
 
-def adjust_for_wegovy(t, pars):
-    if t > 1825:  # Assuming drug introduction after three years, expressed in days
-        ramp_duration = 365  # duration over which the drug effect ramps up in days
-        ramp_factor = min((t - 1825) / ramp_duration, 1)  # caps at 1 when the full effect is reached
-        pars["inc_i1"] = max(pars["inc_i1"] - ramp_factor, -0.01)  # Gradually apply the reduction in caloric intake
-        # pars['tau_w'] += ramp_factor #
+def calculate_maintenance_calories(weight_kg, height_m, age=30, sex=1, activity_factor=1.2):
+    """Calculate maintenance calories using Mifflin-St Jeor equation"""
+    height_cm = height_m * 100
+    if sex == 1:  # male
+        bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5
+    else:  # female
+        bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161
+    return bmr * activity_factor
+
+
+def adjust_for_wegovy(t, y, pars):
+    """Adjusts model parameters to simulate Wegovy treatment"""
+    # Reset inc_i1 to 0 by default
+    pars["inc_i1"] = 0
+
+    if t > 2920:  # Start after 8 years
+        ramp_duration = 365  # Ramp up over 1 year
+        ramp_factor = min((t - 2920) / ramp_duration, 1)
+
+        current_weight = y[7]
+        bmi = current_weight / (pars["height"] ** 2)
+
+        # For debugging - print every 365 days after treatment starts
+        if t % 365 < 1:
+            print(f"\nYear {t/365:.0f}:")
+            print(f"Current BMI: {bmi:.1f}")
+            print(f"Current weight: {current_weight:.1f} kg")
+
+        # Calculate maintenance calories at current weight
+        maintenance_calories = calculate_maintenance_calories(current_weight, pars["height"])
+
+        # Target caloric reduction based on BMI category
+        if bmi < 30:
+            target_reduction = -0.1052
+        elif bmi < 35:
+            target_reduction = -0.1179
+        elif bmi < 40:
+            target_reduction = -0.1201
+        else:
+            target_reduction = -0.1223
+
+        # Calculate required deficit and apply gradually
+        required_deficit = target_reduction * maintenance_calories
+
+        # For debugging - print caloric adjustments annually
+        if t % 365 < 1:
+            print(f"Maintenance calories: {maintenance_calories:.0f}")
+            print(f"Target reduction: {target_reduction:.4f}")
+            print(f"Required deficit: {required_deficit:.0f}")
+            print(f"Ramp factor: {ramp_factor:.2f}")
+
+        # Apply the reduction gradually
+        pars["inc_i1"] = (required_deficit / maintenance_calories) * ramp_factor
 
 
 def odde(t, y, pars_npa):
@@ -100,7 +148,7 @@ def odde(t, y, pars_npa):
     pars = dict(zip(pars_n, pars_npa))
 
     # Adjust parameters based on the drug effects if applicable
-    adjust_for_wegovy(t, pars)
+    adjust_for_wegovy(t, y, pars)
 
     # Update pars_npa with potentially modified values from pars
     pars_npa = np.array(list(pars.values()))
@@ -204,7 +252,7 @@ def odde(t, y, pars_npa):
         * (1 - mffa * ffa**nsi_ffa / (ffa**nsi_ffa + ksi_ffa**nsi_ffa))
     )
     tsi = sw11 * tsi1 + (1 - sw11) * tsi2
-    intake_i = 2500
+    intake_i = pars["intake_i"]
     inc_int = (
         0
         + heav(t - it1) * heav(it2 - t) * heav(it3 - t) * inc_i1
