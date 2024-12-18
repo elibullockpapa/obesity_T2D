@@ -1,0 +1,68 @@
+1. Abstract
+- Summarize the goal of the report, methods, and findings.
+- Highlight the importance of modeling obesity treatments with GLP-1 agonists and replicating real-world outcomes.
+
+2. Introduction and Motivation
+- Why Modeling Obesity Matters
+  - The rise of obesity and its connection to Type II Diabetes (T2D).
+  - Importance of identifying treatment windows for GLP-1 agonists like Wegovy to maximize efficacy.
+- Why GLP-1 Agonists are Revolutionary
+  - Overview of Semaglutide's multiple effects (weight loss and blood glucose control).
+
+3. Past and Current Understanding of Obesity and T2D
+- Historical Perspective
+  - Insulin resistance theories and beta-cell dysfunction.
+- Modern Understanding
+  - Pathways involving insulin, glucose, Free Fatty Acids (FFA), and inflammation leading to T2D.
+  - Include labeled pathway diagrams with brief explanations.
+
+4. 4-Year Weight Loss Data Adjustments and Calorie Reductions
+- Data Source: SELECT Trial
+  - Summarize findings from the SELECT trial on Semaglutide for weight loss across BMI categories.
+- Adjusting the Trial Data
+  - Extracting the 4-year weight loss data.
+  - Adjusting for perfect adherence to drug and placebo arms to isolate treatment effects.
+  - BMI Class Breakdown
+    - Explain how you adjusted weight loss data for BMI classes (e.g., <30, 30-35, 35-40, ≥40 kg/m²).
+- Calorie Reduction Estimations
+  - Real-world trials report weight loss, not calorie intake reductions.
+  - Describe how calorie reductions were estimated to replicate observed weight loss findings.
+  - Include BMI to weight to calories needed calculations:
+BMI Category | Initial Weight | Initial Calories | Final Weight | Final Calories | Weight Change
+----------------------------------------------------------------------------------------------------
+    <30     |      90.7      |      2805       |     81.2     |      2506      |    -10.5    %
+   30-35    |     105.3      |      3258       |     92.9     |      2871      |    -11.8    %
+   35-40    |     121.5      |      3763       |    106.9     |      3311      |    -12.0    %
+    ≥40     |     136.1      |      4216       |    119.4     |      3697      |    -12.2    %
+
+
+5. Mimicking Wegovy Treatment Course
+- Creating the Ramp-Up Function
+  - Simulating gradual ramp-up of Wegovy treatment:
+    - Treatment start time.
+    - Ramp duration.
+    - Minimum calorie intake thresholds.
+- Aligning the Simulation Model
+  - Discuss adjustments to starting parameters in your model to match the trial weight outcomes.
+
+6. Model Results: Simulating Treatments
+- Baseline and Extended Simulations
+  - Results when treatment starts at year 5 with a 30% calorie drop.
+- Key Outcomes
+  - Compare model outputs for variables like insulin, glucose, beta-cell mass, etc.
+- Insights and Gaps
+  - Discuss alignment and mismatches with real-world trials.
+
+7. Important Caveats
+- Model Limitations
+  - Explain Wegovy’s non-weight loss effects on blood sugar control.
+  - Highlight anecdotal evidence of rapid blood sugar improvements in severe diabetes cases (200 mg/dL+), which are implausible under the current model.
+
+8. Conclusions and Future Work
+- Key Takeaways
+  - The model aligns directionally with trial data, demonstrating GLP-1 agonist effects on weight, insulin sensitivity, and inflammation.
+- Future Directions
+  - More accurate modeling is needed to capture non-weight mechanisms and replicate medical trial results.
+
+9. References
+- Include all sources, such as SELECT trial data, prior models, and relevant literature.

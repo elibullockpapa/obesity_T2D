@@ -101,18 +101,18 @@ def adjust_for_wegovy(t, y, pars):
     # Reset inc_i1 to 0 by default
     pars["inc_i1"] = 0
 
-    if t > 2920:  # Start after 8 years
+    if t > 1825:  # Start after 5 years
         ramp_duration = 365  # Ramp up over 1 year
-        ramp_factor = min((t - 2920) / ramp_duration, 1)
+        ramp_factor = min((t - 1825) / ramp_duration, 1)
 
         current_weight = y[7]
         bmi = current_weight / (pars["height"] ** 2)
 
         # For debugging - print every 365 days after treatment starts
-        if t % 365 < 1:
-            print(f"\nYear {t/365:.0f}:")
-            print(f"Current BMI: {bmi:.1f}")
-            print(f"Current weight: {current_weight:.1f} kg")
+        # if t % 365 < 1:
+        #     print(f"\nYear {t/365:.0f}:")
+        #     print(f"Current BMI: {bmi:.1f}")
+        #     print(f"Current weight: {current_weight:.1f} kg")
 
         # Calculate maintenance calories at current weight
         maintenance_calories = calculate_maintenance_calories(current_weight, pars["height"])
@@ -131,11 +131,11 @@ def adjust_for_wegovy(t, y, pars):
         required_deficit = target_reduction * maintenance_calories
 
         # For debugging - print caloric adjustments annually
-        if t % 365 < 1:
-            print(f"Maintenance calories: {maintenance_calories:.0f}")
-            print(f"Target reduction: {target_reduction:.4f}")
-            print(f"Required deficit: {required_deficit:.0f}")
-            print(f"Ramp factor: {ramp_factor:.2f}")
+        # if t % 365 < 1:
+        #     print(f"Maintenance calories: {maintenance_calories:.0f}")
+        #     print(f"Target reduction: {target_reduction:.4f}")
+        #     print(f"Required deficit: {required_deficit:.0f}")
+        #     print(f"Ramp factor: {ramp_factor:.2f}")
 
         # Apply the reduction gradually
         pars["inc_i1"] = (required_deficit / maintenance_calories) * ramp_factor

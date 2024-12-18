@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from model_with_wegovy import pars, odde
+import string
+import matplotlib.transforms as mtransforms
+
+initial_values_printed = False
 
 
 def calculate_maintenance_calories(weight_kg, height_m, age=30, sex=1, activity_factor=1.2):
@@ -14,94 +18,165 @@ def calculate_maintenance_calories(weight_kg, height_m, age=30, sex=1, activity_
     return bmr * activity_factor
 
 
-def run_wegovy_trial():
-    """Simulate weight trajectory for BMI 30-35 group with Wegovy treatment"""
-    height_m = pars["height"]
+def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initial_weight=81):
+    """Simulate a specific BMI category with pre-treatment and treatment phases"""
+    global initial_values_printed
 
-    # We'll only simulate BMI 30-35 group
-    target_bmi = 32.5  # middle of 30-35 range
-    target_weight = target_bmi * height_m**2
-
-    # Starting from healthy BMI (BMI 25)
-    initial_weight = 25 * height_m**2
-
-    print("\nInitial Setup:")
-    print(f"Height: {height_m:.2f} m")
-    print(f"Initial weight: {initial_weight:.1f} kg (BMI {25:.1f})")
-    print(f"Target weight: {target_weight:.1f} kg (BMI {target_bmi:.1f})")
-
-    # Simulation parameters
-    t_span = [0, 4380]  # 12 years total
-    t_eval = np.linspace(0, 4380, 4381)  # daily points
-
-    # Calculate maintenance calories at target weight
-    maintenance_at_target = calculate_maintenance_calories(weight_kg=target_weight, height_m=height_m)
-
-    # To gain weight, we need a surplus
-    weight_gain_calories = maintenance_at_target * 2
-
-    print(f"\nCaloric calculations:")
-    print(f"Maintenance calories at target: {maintenance_at_target:.0f}")
-    print(f"Weight gain calories: {weight_gain_calories:.0f}")
+    t_span = [0, 3285]  # 9 years total
+    t_eval = np.linspace(0, 3285, 3286)  # daily points
 
     # Initial conditions [g, i, ffa, si, b, sigma, infl, w]
     y0 = [94.1, 9.6, 404, 0.8, 1009, 530, 0.056, initial_weight]
 
+    # Set up parameters
     local_pars = pars.copy()
-    local_pars["intake_i"] = weight_gain_calories
+
+    def custom_odde(t, y, pars_npa):
+        pars_dict = dict(zip(pars.keys(), pars_npa))
+
+        if t < 1825:  # First 5 years - weight gain phase
+            pars_dict["intake_i"] = pre_calories
+        else:  # Next 4 years - treatment phase
+            pars_dict["intake_i"] = treatment_calories
+
+        return odde(t, y, np.array(list(pars_dict.values())))
 
     # Run simulation
-    sol = solve_ivp(odde, t_span, y0, method="LSODA", t_eval=t_eval, args=(np.array(list(local_pars.values())),))
+    sol = solve_ivp(custom_odde, t_span, y0, method="LSODA", t_eval=t_eval, args=(np.array(list(local_pars.values())),))
 
-    # Print yearly status
-    print("\nYearly Status:")
-    for year in range(13):  # 0 to 12 years
-        day = year * 365
-        if day < len(sol.t):
-            weight = sol.y[7][day]
-            bmi = weight / height_m**2
-            maintenance = calculate_maintenance_calories(weight, height_m)
+    # Convert weight to BMI
+    sol.y[7] = sol.y[7] / (pars["height"] ** 2)
 
-            print(f"\nYear {year}:")
-            print(f"Weight: {weight:.1f} kg")
-            print(f"BMI: {bmi:.1f}")
-            print(f"Maintenance calories: {maintenance:.0f}")
+    # Print values at key timepoints
+    variables = ["Glucose", "Insulin", "FFA", "Si", "Beta", "Sigma", "Inflammation", "BMI"]
 
-            # Show actual intake (including any reductions)
-            actual_intake = weight_gain_calories * (1 + pars["inc_i1"])
-            print(f"Actual intake: {actual_intake:.0f}")
+    # Initial values (t=0) - only print once
+    if not initial_values_printed:
+        print("\nInitial values (all groups):")
+        for var, val in zip(variables, [y[0] for y in sol.y]):
+            print(f"{var:12}: {val:.2f}")
+        initial_values_printed = True
 
-            if year >= 8:
-                peak_weight = np.max(sol.y[7][:day])
-                pct_change = (weight - peak_weight) / peak_weight * 100
-                print(f"Change from peak: {pct_change:.1f}%")
+    # Print the bmi category
+    print(f"\n=== {bmi_category} ===")
 
-    # Calculate final results
-    peak_weight = np.max(sol.y[7])
-    final_weight = sol.y[7][-1]
-    pct_change = (final_weight - peak_weight) / peak_weight * 100
+    # Post weight gain (t=1825, 5 years)
+    print("\nPost weight gain (5 years):")
+    idx_5y = 1825
+    for var, vals in zip(variables, sol.y):
+        print(f"{var:12}: {vals[idx_5y]:.2f}")
 
-    print("\nFinal Results:")
-    print(f"Peak weight: {peak_weight:.1f} kg (BMI {peak_weight/height_m**2:.1f})")
-    print(f"Final weight: {final_weight:.1f} kg (BMI {final_weight/height_m**2:.1f})")
-    print(f"Total change from peak: {pct_change:.1f}%")
+    # Final values (t=3285, 9 years)
+    print("\nPost treatment (9 years):")
+    idx_9y = -1
+    for var, vals in zip(variables, sol.y):
+        print(f"{var:12}: {vals[idx_9y]:.2f}")
 
-    # Plot results
-    plt.figure(figsize=(12, 8))
+    # Calculate DPI at final timepoint
+    dpi = 1 - (sol.y[3][idx_9y] * sol.y[4][idx_9y] * sol.y[5][idx_9y]) / (sol.y[3][0] * sol.y[4][0] * sol.y[5][0])
+    print(f"{'DPI':12}: {dpi:.2f}")
 
-    # Convert to years for plotting
-    years = sol.t / 365
+    return sol
 
-    # Plot absolute weight instead of percentage change
-    plt.plot(years, sol.y[7], label="BMI 30-35")
-    plt.axvline(x=8, color="gray", linestyle="--", alpha=0.5, label="Wegovy Start")
-    plt.grid(True, alpha=0.3)
-    plt.xlabel("Time (years)")
-    plt.ylabel("Weight (kg)")
-    plt.title("Simulated Wegovy Trial Results (BMI 30-35)")
-    plt.legend()
+
+def plot_trial_results():
+    """Plot biomarkers for all BMI categories"""
+    # Variable names with LaTeX formatting
+    vn = [
+        r"G ($mg/dl$)",
+        r"I ($\mu U/ml$)",
+        r"FFA ($\mu mol/l$)",
+        r"S$_i$ ($ml/ \mu U/day$)",
+        r"$\beta$ ($mg$)",
+        r"$\sigma$ ($\mu U/mg/day$)",
+        r"$\theta$",
+        "BMI ($kg/m^2$)",
+    ]
+
+    # Create figure with matching size and layout
+    fig = plt.figure(tight_layout=False)
+    axs = fig.subplots(3, 3)
+    axs = axs.ravel()
+
+    # Add subplot labels (A, B, C, etc.)
+    letter = string.ascii_uppercase
+    trans = mtransforms.ScaledTranslation(-20 / 72, 7 / 72, fig.dpi_scale_trans)
+
+    # Set y-limits and labels for each subplot
+    for i in range(len(axs) - 1):
+        axs[i].text(
+            -0.1,
+            1.05,
+            letter[i],
+            transform=axs[i].transAxes,
+            fontsize="medium",
+            weight="bold",
+            va="bottom",
+            fontfamily="arial",
+        )
+        axs[i].tick_params(axis="both", which="major", labelsize=10)
+
+        # Match y-limits from figure2
+        if i == 0:
+            axs[i].set_ylim([90, 150])
+        if i == 1:
+            axs[i].set_ylim([9, 17])
+        if i == 2:
+            axs[i].set_ylim([400, 720])
+        if i == 3:
+            axs[i].set_ylim([0.2, 0.9])
+        if i == 4:
+            axs[i].set_ylim([720, 1250])
+        if i == 5:
+            axs[i].set_ylim([350, 570])
+        if i == 6:
+            axs[i].set_ylim([0, 0.7])
+        if i == 7:
+            axs[i].set_ylim([20, 45])
+
+    # BMI categories and their caloric patterns from outline.txt
+    scenarios = {
+        "BMI <30": {"pre_calories": 2797, "treatment_calories": 2797 * 0.8948},
+        "BMI 30-35": {"pre_calories": 3266, "treatment_calories": 3266 * 0.8821},
+        "BMI 35-40": {"pre_calories": 3754, "treatment_calories": 3754 * 0.8799},
+        "BMI ≥40": {"pre_calories": 4203, "treatment_calories": 4203 * 0.8777},
+    }
+
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+
+    # Run simulations and plot results
+    for (label, scenario), color in zip(scenarios.items(), colors):
+        sol = simulate_bmi_category(label, scenario["pre_calories"], scenario["treatment_calories"])
+        years = sol.t / 365
+
+        # Plot each variable with consistent styling
+        for i in range(8):
+            axs[i].plot(years, sol.y[i], c=color, label=label)
+            axs[i].set_xlabel("Time (years)", size="medium")
+            axs[i].set_ylabel(vn[i], size="medium", labelpad=2)
+
+        # DPI calculation and plotting
+        dpi = 1 - (sol.y[3] * sol.y[4] * sol.y[5]) / (sol.y[3][0] * sol.y[4][0] * sol.y[5][0])
+        axs[8].plot(years, dpi, c=color, label=label)
+
+    # Configure DPI subplot
+    axs[8].set_xlabel("Time (years)", size="medium")
+    axs[8].set_ylabel("DPI", size="medium", labelpad=2)
+    axs[8].set_ylim([0, 1])
+
+    # Add legend to first subplot with matching style
+    axs[0].legend(fontsize="small", framealpha=0.5, ncol=2, loc=(0, 1.25))
+
+    # Add reference lines to glucose plot
+    axs[0].hlines(y=[100, 125], xmin=0, xmax=max(years), linestyles=":", colors=["k", "r"], linewidth=0.8)
+
+    # Match figure size and layout adjustments
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.88, bottom=0.09, left=0.08, right=0.98, hspace=0.6, wspace=0.45)
+    fig.set_size_inches([8.5, 5.7])
+
     plt.show()
 
 
 if __name__ == "__main__":
-    run_wegovy_trial()
+    plot_trial_results()
