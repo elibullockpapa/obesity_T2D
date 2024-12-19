@@ -22,8 +22,8 @@ def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initia
     """Simulate a specific BMI category with pre-treatment and treatment phases"""
     global initial_values_printed
 
-    t_span = [0, 3285]  # 9 years total
-    t_eval = np.linspace(0, 3285, 3286)  # daily points
+    t_span = [0, 2555]  # 7 years total (5 years pre + 2 years treatment)
+    t_eval = np.linspace(0, 2555, 2556)  # daily points
 
     # Initial conditions [g, i, ffa, si, b, sigma, infl, w]
     y0 = [94.1, 9.6, 404, 0.8, 1009, 530, 0.056, initial_weight]
@@ -36,25 +36,35 @@ def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initia
 
         if t < 1825:  # First 5 years - weight gain phase
             pars_dict["intake_i"] = pre_calories
-        else:  # Next 4 years - treatment phase
-            pars_dict["intake_i"] = treatment_calories
+        else:  # Treatment phase
+            days_in_treatment = t - 1825
+            if days_in_treatment <= 60:  # 2-month ramp up
+                ramp_factor = days_in_treatment / 60  # Linear ramp from 0 to 1
+                calorie_reduction = (pre_calories - treatment_calories) * ramp_factor
+                pars_dict["intake_i"] = pre_calories - calorie_reduction
+            else:  # Full treatment
+                pars_dict["intake_i"] = treatment_calories
 
-        return odde(t, y, np.array(list(pars_dict.values())))
+        return odde(t, y, np.array(list(pars_dict.values())), pre_treatment_years=5, treatment_years=2)
 
     # Run simulation
     sol = solve_ivp(custom_odde, t_span, y0, method="LSODA", t_eval=t_eval, args=(np.array(list(local_pars.values())),))
+
+    # Store weight before BMI conversion
+    weights = sol.y[7].copy()
 
     # Convert weight to BMI
     sol.y[7] = sol.y[7] / (pars["height"] ** 2)
 
     # Print values at key timepoints
-    variables = ["Glucose", "Insulin", "FFA", "Si", "Beta", "Sigma", "Inflammation", "BMI"]
+    variables = ["Glucose", "Insulin", "FFA", "Si", "Beta", "Sigma", "Inflammation", "BMI", "Weight (kg)"]
 
     # Initial values (t=0) - only print once
     if not initial_values_printed:
         print("\nInitial values (all groups):")
-        for var, val in zip(variables, [y[0] for y in sol.y]):
+        for var, val in zip(variables[:-1], [y[0] for y in sol.y]):
             print(f"{var:12}: {val:.2f}")
+        print(f"{'Weight (kg)':12}: {weights[0]:.2f}")
         initial_values_printed = True
 
     # Print the bmi category
@@ -63,17 +73,19 @@ def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initia
     # Post weight gain (t=1825, 5 years)
     print("\nPost weight gain (5 years):")
     idx_5y = 1825
-    for var, vals in zip(variables, sol.y):
+    for var, vals in zip(variables[:-1], sol.y):
         print(f"{var:12}: {vals[idx_5y]:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[idx_5y]:.2f}")
 
-    # Final values (t=3285, 9 years)
-    print("\nPost treatment (9 years):")
-    idx_9y = -1
-    for var, vals in zip(variables, sol.y):
-        print(f"{var:12}: {vals[idx_9y]:.2f}")
+    # Final values (t=2555, 7 years)
+    print("\nPost treatment (7 years):")
+    idx_7y = -1
+    for var, vals in zip(variables[:-1], sol.y):
+        print(f"{var:12}: {vals[idx_7y]:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[idx_7y]:.2f}")
 
     # Calculate DPI at final timepoint
-    dpi = 1 - (sol.y[3][idx_9y] * sol.y[4][idx_9y] * sol.y[5][idx_9y]) / (sol.y[3][0] * sol.y[4][0] * sol.y[5][0])
+    dpi = 1 - (sol.y[3][idx_7y] * sol.y[4][idx_7y] * sol.y[5][idx_7y]) / (sol.y[3][0] * sol.y[4][0] * sol.y[5][0])
     print(f"{'DPI':12}: {dpi:.2f}")
 
     return sol

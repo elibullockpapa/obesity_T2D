@@ -1,22 +1,32 @@
-1. Abstract
+Abstract
 - Summarize the goal of the report, methods, and findings.
 - Highlight the importance of modeling obesity treatments with GLP-1 agonists and replicating real-world outcomes.
+- The goal is to model treatment windows and validate this diabetes and weight loss model with real-world data to test its clinical relevance.
 
-2. Introduction and Motivation
+1. Introduction and Motivation
 - Why Modeling Obesity Matters
-  - The rise of obesity and its connection to Type II Diabetes (T2D).
-  - Importance of identifying treatment windows for GLP-1 agonists like Wegovy to maximize efficacy.
+  - The rise of obesity as a global health crisis:
+    * Adult obesity rates in the US increased from 30.5% (1999-2000) to 41.9% (2017-2020)
+    * Severe obesity doubled from 4.7% to 9.2% in the same period
+    * Over 100 million US adults have obesity, with 22 million having severe obesity
+    * Childhood obesity affects 20% of US children and adolescents
+  - The connection between obesity and Type II Diabetes (T2D)
+  - Importance of identifying treatment windows for GLP-1 agonists like Wegovy to maximize efficacy
 - Why GLP-1 Agonists are Revolutionary
   - Overview of Semaglutide's multiple effects (weight loss and blood glucose control).
 
-3. Past and Current Understanding of Obesity and T2D
+2. Background: Past and Current Understanding of Obesity and T2D
 - Historical Perspective
   - Insulin resistance theories and beta-cell dysfunction.
 - Modern Understanding
-  - Pathways involving insulin, glucose, Free Fatty Acids (FFA), and inflammation leading to T2D.
-  - Include labeled pathway diagrams with brief explanations.
+  - Early-Life Positive Energy Balance: Excessive caloric intake relative to energy expenditure leads to increased fat storage and obesity from a young age
+  - Adipose Tissue Expansion and Metabolic Signals: Growing fat mass secretes inflammatory molecules and free fatty acids that impair insulin response
+  - Insulin Resistance and Compensation: Pancreatic β-cells increase insulin production to maintain glucose levels, causing chronic hyperinsulinemia
+  - β-Cell Stress and Dysfunction: Sustained high insulin demand strains β-cells, reducing efficiency and causing cell death
+  - Progression to Youth-Onset Type 2 Diabetes: Declining β-cell function combined with insulin resistance leads to elevated blood glucose and early T2D onset
+- Include labeled pathway diagrams with brief explanations. The diagram is in images/obesity_and_t2d_diagram.png and has numbered paths labeled 1-16
 
-4. 4-Year Weight Loss Data Adjustments and Calorie Reductions
+3. Setting up the simulation
 - Data Source: SELECT Trial
   - Summarize findings from the SELECT trial on Semaglutide for weight loss across BMI categories.
 - Adjusting the Trial Data
@@ -34,35 +44,28 @@ BMI Category | Initial Weight | Initial Calories | Final Weight | Final Calories
    30-35    |     105.3      |      3258       |     92.9     |      2871      |    -11.8    %
    35-40    |     121.5      |      3763       |    106.9     |      3311      |    -12.0    %
     ≥40     |     136.1      |      4216       |    119.4     |      3697      |    -12.2    %
-
-
-5. Mimicking Wegovy Treatment Course
 - Creating the Ramp-Up Function
   - Simulating gradual ramp-up of Wegovy treatment:
-    - Treatment start time.
-    - Ramp duration.
+    - Treatment start time. (5 years)
+    - Ramp duration. (2 months)
     - Minimum calorie intake thresholds.
-- Aligning the Simulation Model
-  - Discuss adjustments to starting parameters in your model to match the trial weight outcomes.
 
-6. Model Results: Simulating Treatments
+4. Model Results and caveats
 - Baseline and Extended Simulations
   - Results when treatment starts at year 5 with a 30% calorie drop.
 - Key Outcomes
   - Compare model outputs for variables like insulin, glucose, beta-cell mass, etc.
 - Insights and Gaps
   - Discuss alignment and mismatches with real-world trials.
-
-7. Important Caveats
 - Model Limitations
   - Explain Wegovy’s non-weight loss effects on blood sugar control.
   - Highlight anecdotal evidence of rapid blood sugar improvements in severe diabetes cases (200 mg/dL+), which are implausible under the current model.
 
-8. Conclusions and Future Work
+5. Conclusions and Future Work
 - Key Takeaways
   - The model aligns directionally with trial data, demonstrating GLP-1 agonist effects on weight, insulin sensitivity, and inflammation.
 - Future Directions
   - More accurate modeling is needed to capture non-weight mechanisms and replicate medical trial results.
 
-9. References
+References
 - Include all sources, such as SELECT trial data, prior models, and relevant literature.

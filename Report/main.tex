@@ -31,25 +31,39 @@
 \renewenvironment{abstract}
  {\par\noindent\textbf{\abstractname}\ \ignorespaces \\}
  {\par\noindent\medskip}
+\usepackage[utf8]{inputenc}  % For Unicode characters like β
+\usepackage{graphicx}        % For including images
+\usepackage[T1]{fontenc}     % Better font encoding
+\usepackage{amsmath}        % For \text command in math mode
+\usepackage{listings}       % For code listings
+\usepackage{xcolor}         % For colored text in listings
 
+% Listing settings
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{green!50!black},
+    numbers=left,
+    numberstyle=\tiny\
+}
 
-
- 
 \begin{document}
 % Makes header
 \pagestyle{fancy}
 \thispagestyle{empty}
-\fancyhead[R]{\textit{Baltic Security Foundation}}
+\fancyhead[R]{\textit{CS 5424}}
 \fancyhead[L]{}
 % Makes footnotes with an asterisk
 \renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 \begin{center}
-\Large{\textbf{Paper Title}}
+\Large{\textbf{Modeling the Pathway from Obesity to Type 2 Diabetes}}
 \vspace{0.4cm}
 \normalsize
-\\ Author Name, Author Name \\
+\\ Eli Bullock-Papa \\
 \vspace{0.1cm}
-\textit{Organization}
+\textit{Virginia Tech}
 \medskip
 \normalsize
 \end{center}
@@ -61,9 +75,12 @@
 {\color{gray}\hrule}
 \medskip
 \input{./sections/1_intro.tex}
-\input{./sections/2_section.tex}
-\input{./sections/3_section.tex}
-\input{./sections/4_section.tex}
+\input{./sections/2_background.tex}
+\vspace{0.4cm}
+\input{./sections/3_preparing_data.tex}
+\vspace{0.4cm}
+\input{./sections/4_model_results.tex}
+\vspace{0.4cm}
 \input{./sections/5_conclusion.tex}
 \bibliographystyle{plain}
 \bibliography{references}
