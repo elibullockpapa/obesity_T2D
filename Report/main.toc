@@ -1,14 +1,14 @@
-\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
 \contentsline {subsection}{\numberline {1.1}Modeling Objectives}{2}{subsection.1.1}%
 \contentsline {section}{\numberline {2}Understanding Obesity and T2D}{2}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Historical Perspective}{2}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Modern Understanding}{2}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Pathway Integration}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.2}Modern Understanding}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Pathway Integration}{4}{subsection.2.3}%
 \contentsline {section}{\numberline {3}Setting up the simulation}{5}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Data Measured in Trials}{5}{subsection.3.1}%
 \contentsline {subsection}{\numberline {3.2}Adjusting for our Model}{6}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}Binary Search for Caloric Requirements}{6}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Model Parameter Adjustments}{7}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.4}Model Parameter Adjustments}{8}{subsection.3.4}%
 \contentsline {subsection}{\numberline {3.5}Creating the Ramp-Up Function}{8}{subsection.3.5}%
 \contentsline {section}{\numberline {4}Model Results}{9}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Recreating the STEP Trial}{9}{subsection.4.1}%
