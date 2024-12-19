@@ -10,11 +10,11 @@
 \contentsline {subsection}{\numberline {3.3}Binary Search for Caloric Requirements}{6}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}Model Parameter Adjustments}{8}{subsection.3.4}%
 \contentsline {subsection}{\numberline {3.5}Creating the Ramp-Up Function}{8}{subsection.3.5}%
-\contentsline {section}{\numberline {4}Model Results}{9}{section.4}%
+\contentsline {section}{\numberline {4}Model Results}{8}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Recreating the STEP Trial}{9}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Recreating the STASIS Trial}{10}{subsection.4.2}%
 \contentsline {section}{\numberline {5}Conclusions}{12}{section.5}%
 \contentsline {subsection}{\numberline {5.1}Key Findings}{12}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Model Limitations}{12}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Future Directions}{13}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.3}Future Directions}{12}{subsection.5.3}%
 \contentsline {subsection}{\numberline {5.4}Clinical Implications}{13}{subsection.5.4}%

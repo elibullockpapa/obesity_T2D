@@ -146,41 +146,26 @@ And for the STEP trial:
 \end{table}
 
 \subsection{Model Parameter Adjustments}
-Several parameters in our model were not directly measured in the clinical trials. To address this, we adjusted these parameters to match the observed biomarker values after two weeks of treatment. The following tables show the default values and the adjusted values for both trials:
+Several parameters in our model vary by BMI category. The following tables show the initial values for each BMI group:
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|c|c|c|c|}
+\small  % Reduce font size slightly
+\begin{tabular}{|l|c|c|c|c|c|}
 \hline
-\textbf{Parameter} & \textbf{Default} & \textbf{Post 2-Week} & \textbf{Units} \\
+\textbf{Parameter} & \textbf{Default} & \textbf{$<$30} & \textbf{30-35} & \textbf{35-40} & \textbf{$\geq$40} \\
 \hline
-Free Fatty Acids & 400 & 688.65 & $\mu$mol/l \\
-Insulin Sensitivity & 0.8 & 0.26 & ml/$\mu$U/day \\
-Beta Cell Mass & 1009 & 1009 & mg \\
-Insulin Secretion & 530 & 501.64 & $\mu$U/mg/day \\
-Inflammation & 0.056 & 0.45 & dimensionless \\
-\hline
-\end{tabular}
-\caption{Parameter adjustments for SELECT trial to match 2-week biomarkers}
-\end{table}
-
-\begin{table}[!h]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Parameter} & \textbf{Default} & \textbf{Post 2-Week} & \textbf{Units} \\
-\hline
-Free Fatty Acids & 400 & 688.65 & $\mu$mol/l \\
-Insulin Sensitivity & 0.8 & 0.26 & ml/$\mu$U/day \\
-Beta Cell Mass & 1009 & 1009 & mg \\
-Insulin Secretion & 530 & 501.64 & $\mu$U/mg/day \\
-Inflammation & 0.056 & 0.45 & dimensionless \\
+Glucose (mg/dl) & 94.1 & 96.21 & 102.73 & 112.93 & 122.40 \\
+Insulin ($\mu$U/ml) & 9.6 & 10.43 & 12.75 & 15.19 & 15.60 \\
+FFA ($\mu$mol/l) & 404 & 424.02 & 481.58 & 565.77 & 642.29 \\
+S$_i$ (ml/$\mu$U/day) & 0.8 & 0.70 & 0.50 & 0.33 & 0.26 \\
+$\beta$ (mg) & 1009 & 1010.12 & 1011.75 & 1010.04 & 1006.71 \\
+$\sigma$ ($\mu$U/mg/day) & 530 & 541.97 & 562.44 & 540.27 & 470.42 \\
+Inflammation & 0.056 & 0.11 & 0.22 & 0.40 & 0.57 \\
 \hline
 \end{tabular}
-\caption{Parameter adjustments for STEP trial to match 2-week biomarkers}
+\caption{Initial model parameters by BMI category. The default values represent the original model parameters, while the BMI-specific values are derived from the STASIS trial data.}
 \end{table}
-
-These adjustments were essential for ensuring our model most accurately reflected the physiological changes observed in the clinical trials while maintaining consistency with known biological mechanisms.
 
 \subsection{Creating the Ramp-Up Function}
 To accurately model the gradual onset of Wegovy's appetite-suppressing effects, we implemented a ramp-up function that simulates the typical clinical titration schedule. The function gradually increases the medication's effect over time, which better reflects real-world patient experiences and helps avoid sudden caloric restrictions.
