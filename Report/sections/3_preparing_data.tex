@@ -9,23 +9,6 @@
 \subsection{Data Measured in Trials}
 To accurately model weight loss across different BMI categories, we analyzed data from both the SELECT and STASIS trials \cite{Ryan2024}. Our goal was to determine the true treatment effect of semaglutide assuming perfect adherence.
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Parameter} & \textbf{SELECT Trial} & \textbf{STASIS Trial} & \textbf{Units} \\
-\hline
-Duration & 4 years & 2 years & years \\
-Baseline Weight & 105.6 & BMI dependent & kg \\
-Baseline Glucose & 95.4 & BMI dependent & mg/dl \\
-Baseline Insulin & 12.6 & BMI dependent & $\mu$U/ml \\
-Height & 1.65 & 1.8 & m \\
-Age & 47.3 & 30 & years \\
-\hline
-\end{tabular}
-\caption{Key measurements from both trials at baseline}
-\end{table}
-
 For the SELECT trial, we incorporated three key components:
 \begin{itemize}
     \item Estimated Treatment Differences (ETD) for each BMI category
@@ -69,6 +52,72 @@ Inflammation & 0.11 & 0.22 & 0.40 & 0.57 \\
 \end{tabular}
 \caption{STASIS trial baseline measurements by BMI category}
 \end{table}
+
+\subsection{STEP Trial Data}
+We analyzed data from the STEP trial, which provided both baseline and 2-year measurements for several key parameters, as well as percentage changes for others.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Parameter} & \textbf{Baseline} & \textbf{2-Year} & \textbf{Change (\%)} \\
+\hline
+\multicolumn{4}{|c|}{\textit{Directly Measured Values}} \\
+\hline
+Weight (kg) & 105.6 & 89.5 & -15.2 \\
+Glucose (mg/dl) & 95.4 & 88.2 & -7.5 \\
+Insulin ($\mu$U/ml) & 12.6 & 8.5 & -32.7 \\
+\hline
+\multicolumn{4}{|c|}{\textit{Percentage Changes Only}} \\
+\hline
+FFA ($\mu$mol/l) & -- & -- & +0.3 \\
+Inflammation & -- & -- & -56.7 \\
+\hline
+\end{tabular}
+\caption{STEP trial measurements showing both absolute values and percentage changes}
+\end{table}
+
+\subsection{Model Parameter Selection}
+To run our simulation, we needed values for all model parameters. These came from three sources:
+\begin{enumerate}
+    \item Direct measurements from the STEP trial
+    \item Default model values (when measurements weren't available)
+    \item Fitted values (when default values proved unstable)
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\textbf{Parameter} & \textbf{Default} & \textbf{Used} & \textbf{Source} & \textbf{Notes} \\
+\hline
+Glucose & 94.1 & 95.4 & Measured & From STEP baseline \\
+Insulin & 9.6 & 12.6 & Measured & From STEP baseline \\
+Weight & 81.0 & 105.6 & Measured & From STEP baseline \\
+Height & 1.8 & 1.65 & Measured & From STEP baseline \\
+Age & 30 & 47.3 & Measured & From STEP baseline \\
+\hline
+FFA & 400 & 688.65 & Fitted & Default unstable \\
+Si & 0.8 & 0.26 & Fitted & Default unstable \\
+Beta & 1009 & 1009 & Default & Stable value \\
+Sigma & 530 & 501.64 & Fitted & Default unstable \\
+Inflammation & 0.056 & 0.45 & Fitted & Default unstable \\
+\hline
+\end{tabular}
+\caption{Model parameter sources and values. "Fitted" values were determined by running a 2-week simulation and observing where parameters stabilized when default values proved unstable.}
+\end{table}
+
+\subsection{Parameter Stability Analysis}
+For parameters where we used fitted values instead of defaults, this decision was based on observing significant instability in the first two weeks of simulation. A parameter was considered unstable if it showed rapid deviation from its initial value, suggesting the default was physiologically unlikely for the STEP trial population.
+
+For example:
+\begin{itemize}
+    \item FFA increased from 400 to 688.65 $\mu$mol/l
+    \item Si decreased from 0.8 to 0.26 ml/$\mu$U/day
+    \item Inflammation increased from 0.056 to 0.45
+\end{itemize}
+
+These fitted values were then used as initial conditions for the full simulation, resulting in more stable trajectories that better matched the observed clinical outcomes.
 
 \subsection{Adjusting for our Model}
 To translate these findings into our simulation framework, we first converted BMI categories to target weights using our model subject's height (1.8m). We then performed a binary search to determine both the pre-treatment caloric intake needed to reach each BMI category and the treatment-phase intake required to achieve the observed weight loss.
@@ -146,26 +195,56 @@ And for the STEP trial:
 \end{table}
 
 \subsection{Model Parameter Adjustments}
-Several parameters in our model vary by BMI category. The following tables show the initial values for each BMI group:
+For the STASIS trial, we determined model parameters through a two-step process:
+
+1. First, we calculated the target BMI categories and corresponding weights using our model subject's height (1.8m)
+
+2. Then, we fitted the model parameters to reach equilibrium values after a 5-year pre-treatment period with appropriate caloric intake
+
+The resulting fitted parameters were:
 
 \begin{table}[h]
 \centering
-\small  % Reduce font size slightly
 \begin{tabular}{|l|c|c|c|c|c|}
 \hline
-\textbf{Parameter} & \textbf{Default} & \textbf{$<$30} & \textbf{30-35} & \textbf{35-40} & \textbf{$\geq$40} \\
+\textbf{BMI Category} & \textbf{Parameter} & \textbf{Default} & \textbf{Fitted} & \textbf{Units} \\
 \hline
-Glucose (mg/dl) & 94.1 & 96.21 & 102.73 & 112.93 & 122.40 \\
-Insulin ($\mu$U/ml) & 9.6 & 10.43 & 12.75 & 15.19 & 15.60 \\
-FFA ($\mu$mol/l) & 404 & 424.02 & 481.58 & 565.77 & 642.29 \\
-S$_i$ (ml/$\mu$U/day) & 0.8 & 0.70 & 0.50 & 0.33 & 0.26 \\
-$\beta$ (mg) & 1009 & 1010.12 & 1011.75 & 1010.04 & 1006.71 \\
-$\sigma$ ($\mu$U/mg/day) & 530 & 541.97 & 562.44 & 540.27 & 470.42 \\
-Inflammation & 0.056 & 0.11 & 0.22 & 0.40 & 0.57 \\
+\multirow{5}{*}{BMI $<$30} & Glucose & 94.1 & 96.21 & mg/dl \\
+& Insulin & 9.6 & 10.43 & $\mu$U/ml \\
+& FFA & 400 & 424.02 & $\mu$mol/l \\
+& Si & 0.8 & 0.70 & ml/$\mu$U/day \\
+& Inflammation & 0.056 & 0.11 & dimensionless \\
+\hline
+\multirow{5}{*}{BMI 30-35} & Glucose & 94.1 & 102.73 & mg/dl \\
+& Insulin & 9.6 & 12.75 & $\mu$U/ml \\
+& FFA & 400 & 481.58 & $\mu$mol/l \\
+& Si & 0.8 & 0.50 & ml/$\mu$U/day \\
+& Inflammation & 0.056 & 0.22 & dimensionless \\
+\hline
+\multirow{5}{*}{BMI 35-40} & Glucose & 94.1 & 112.93 & mg/dl \\
+& Insulin & 9.6 & 15.19 & $\mu$U/ml \\
+& FFA & 400 & 565.77 & $\mu$mol/l \\
+& Si & 0.8 & 0.33 & ml/$\mu$U/day \\
+& Inflammation & 0.056 & 0.40 & dimensionless \\
+\hline
+\multirow{5}{*}{BMI $\geq$40} & Glucose & 94.1 & 122.40 & mg/dl \\
+& Insulin & 9.6 & 15.60 & $\mu$U/ml \\
+& FFA & 400 & 642.29 & $\mu$mol/l \\
+& Si & 0.8 & 0.26 & ml/$\mu$U/day \\
+& Inflammation & 0.056 & 0.57 & dimensionless \\
 \hline
 \end{tabular}
-\caption{Initial model parameters by BMI category. The default values represent the original model parameters, while the BMI-specific values are derived from the STASIS trial data.}
+\caption{Comparison of default model values and fitted parameters for STASIS trial simulation. The fitted values represent equilibrium states after 5 years of weight gain to reach target BMI categories.}
 \end{table}
+
+These fitted values were chosen to:
+\begin{itemize}
+    \item Achieve stable equilibrium at target BMI categories after 5 years
+    \item Maintain physiologically plausible relationships between parameters
+    \item Produce realistic responses to caloric changes during the treatment phase
+\end{itemize}
+
+It's important to note that these are not direct measurements from the STASIS trial, but rather model parameters that produce the observed BMI distributions and treatment responses when simulated.
 
 \subsection{Creating the Ramp-Up Function}
 To accurately model the gradual onset of Wegovy's appetite-suppressing effects, we implemented a ramp-up function that simulates the typical clinical titration schedule. The function gradually increases the medication's effect over time, which better reflects real-world patient experiences and helps avoid sudden caloric restrictions.

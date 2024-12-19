@@ -3,18 +3,21 @@
 \contentsline {section}{\numberline {2}Understanding Obesity and T2D}{2}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Historical Perspective}{2}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Modern Understanding}{3}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Pathway Integration}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.3}Pathway Integration}{3}{subsection.2.3}%
 \contentsline {section}{\numberline {3}Setting up the simulation}{5}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Data Measured in Trials}{5}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Adjusting for our Model}{6}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Binary Search for Caloric Requirements}{6}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Model Parameter Adjustments}{8}{subsection.3.4}%
-\contentsline {subsection}{\numberline {3.5}Creating the Ramp-Up Function}{8}{subsection.3.5}%
-\contentsline {section}{\numberline {4}Model Results}{8}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Recreating the STEP Trial}{9}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Recreating the STASIS Trial}{10}{subsection.4.2}%
-\contentsline {section}{\numberline {5}Conclusions}{12}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Key Findings}{12}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Model Limitations}{12}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Future Directions}{12}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Clinical Implications}{13}{subsection.5.4}%
+\contentsline {subsection}{\numberline {3.2}STEP Trial Data}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Model Parameter Selection}{6}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Parameter Stability Analysis}{6}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Adjusting for our Model}{7}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Binary Search for Caloric Requirements}{8}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Model Parameter Adjustments}{9}{subsection.3.7}%
+\contentsline {subsection}{\numberline {3.8}Creating the Ramp-Up Function}{10}{subsection.3.8}%
+\contentsline {section}{\numberline {4}Model Results}{10}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Recreating the STEP Trial}{10}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Recreating the STASIS Trial}{12}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Conclusions}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Key Findings}{14}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Model Limitations}{14}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Future Directions}{14}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Clinical Implications}{14}{subsection.5.4}%
