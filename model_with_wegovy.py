@@ -84,42 +84,42 @@ pars_npa = np.array(pars_l)  # Convert list to numpy array for computational eff
 pars_n = list(pars.keys())  # Extract dictionary keys for reference
 
 
-def adjust_for_wegovy(t, y, pars, pre_treatment_years=1, treatment_years=4):
-    """Adjusts model parameters to simulate Wegovy treatment
+# def adjust_for_wegovy(t, y, pars, pre_treatment_years=1, treatment_years=4):
+#     """Adjusts model parameters to simulate Wegovy treatment
 
-    Args:
-        t: Current simulation time in days
-        y: Current state variables (includes height at y[8] and age at y[9])
-        pars: Model parameters
-        pre_treatment_years: Number of years before treatment starts (default 1)
-        treatment_years: Number of years of treatment (default 4)
-    """
-    # Reset inc_i1 to 0 by default
-    pars["inc_i1"] = 0
+#     Args:
+#         t: Current simulation time in days
+#         y: Current state variables (includes height at y[8] and age at y[9])
+#         pars: Model parameters
+#         pre_treatment_years: Number of years before treatment starts (default 1)
+#         treatment_years: Number of years of treatment (default 4)
+#     """
+#     # Reset inc_i1 to 0 by default
+#     pars["inc_i1"] = 0
 
-    treatment_start = pre_treatment_years * 365
-    treatment_end = treatment_start + (treatment_years * 365)
+#     treatment_start = pre_treatment_years * 365
+#     treatment_end = treatment_start + (treatment_years * 365)
 
-    if t > treatment_start and t < treatment_end:
-        ramp_duration = 365  # Ramp up over 1 year
-        ramp_factor = min((t - treatment_start) / ramp_duration, 1)
+#     if t > treatment_start and t < treatment_end:
+#         ramp_duration = 365  # Ramp up over 1 year
+#         ramp_factor = min((t - treatment_start) / ramp_duration, 1)
 
-        current_weight = y[7]
-        height = y[8]  # Height now comes from state variables
-        bmi = current_weight / (height**2)
+#         current_weight = y[7]
+#         height = y[8]  # Height now comes from state variables
+#         bmi = current_weight / (height**2)
 
-        # Target reduction based on BMI category (simplified from trial data)
-        if bmi < 30:
-            target_reduction = -0.1052
-        elif bmi < 35:
-            target_reduction = -0.1179
-        elif bmi < 40:
-            target_reduction = -0.1201
-        else:
-            target_reduction = -0.1223
+#         # Target reduction based on BMI category (simplified from trial data)
+#         if bmi < 30:
+#             target_reduction = -0.1052
+#         elif bmi < 35:
+#             target_reduction = -0.1179
+#         elif bmi < 40:
+#             target_reduction = -0.1201
+#         else:
+#             target_reduction = -0.1223
 
-        # Apply reduction directly to intake
-        pars["inc_i1"] = target_reduction * ramp_factor
+#         # Apply reduction directly to intake
+#         pars["inc_i1"] = target_reduction * ramp_factor
 
 
 def odde(t, y, pars_npa, pre_treatment_years=1, treatment_years=4):
@@ -140,7 +140,7 @@ def odde(t, y, pars_npa, pre_treatment_years=1, treatment_years=4):
     pars_dict = dict(zip(pars.keys(), pars_npa))
 
     # Adjust parameters based on the drug effects if applicable
-    adjust_for_wegovy(t, y, pars_dict, pre_treatment_years, treatment_years)
+    # adjust_for_wegovy(t, y, pars_dict, pre_treatment_years, treatment_years)
 
     # Update pars_npa with potentially modified values
     pars_npa = np.array(list(pars_dict.values()))

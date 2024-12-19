@@ -4,6 +4,7 @@ from scipy.integrate import solve_ivp
 from model_with_wegovy import pars, odde
 import string
 import matplotlib.transforms as mtransforms
+from find_caloric_intake_in_trial import find_equilibrium_calories
 
 # Simulation time periods (in days)
 PRE_TREATMENT_DAYS = 0  # no pre-treatment
@@ -11,29 +12,32 @@ TREATMENT_DAYS = 730  # 2 years
 TOTAL_DAYS = PRE_TREATMENT_DAYS + TREATMENT_DAYS
 CALORIE_REDUCTION_RAMP_DAYS = 60  # 2 months
 
-# Initial conditions
-INITIAL_GLUCOSE = 95.4  # mg/dl
-INITIAL_INSULIN = 12.6  # μU/ml
+# Initial values measured in STEP trial
+INITIAL_GLUCOSE = 95.4  # mg/dl (default is 94.1)
+INITIAL_INSULIN = 12.6  # μU/ml (default is 9.6)
+INITIAL_WEIGHT = 105.6  # kg (default is 81)
+INITIAL_HEIGHT = 1.65  # m (default is 1.8)
+INITIAL_AGE = 47.3  # years (default is 30)
+
+# Initial values from default model
 INITIAL_FFA = 400  # μmol/l
 INITIAL_SI = 0.8  # ml/μU/day
 INITIAL_BETA = 1009  # mg
 INITIAL_SIGMA = 530  # μU/mg/day
 INITIAL_INFLAMMATION = 0.056  # dimensionless
-INITIAL_WEIGHT = 105.6  # kg
-INITIAL_HEIGHT = 1.65  # m
-INITIAL_AGE = 47.3  # years
+
+# Post treatment weight
+FINAL_WEIGHT = 87.9  # kg
 
 initial_values_printed = False
 
 
-def simulate_step_trial(
-    pre_calories, treatment_calories, initial_weight=INITIAL_WEIGHT, height=INITIAL_HEIGHT, age=INITIAL_AGE
-):
+def simulate_step_trial(initial_weight=INITIAL_WEIGHT, height=INITIAL_HEIGHT, age=INITIAL_AGE):
     """Simulate STEP trial with pre-treatment and treatment phases"""
     global initial_values_printed
 
     t_span = [0, TREATMENT_DAYS]
-    t_eval = np.linspace(0, TREATMENT_DAYS, TREATMENT_DAYS + 1)  # daily points
+    t_eval = np.linspace(0, TREATMENT_DAYS, TREATMENT_DAYS + 1)
 
     # Initial conditions [g, i, ffa, si, b, sigma, infl, w, height, age]
     y0 = [
@@ -49,24 +53,23 @@ def simulate_step_trial(
         age,
     ]
 
+    # Calculate equilibrium calories for initial and final weights
+    initial_calories, _ = find_equilibrium_calories(initial_weight, y0, simulation_years=5)
+    final_calories, _ = find_equilibrium_calories(FINAL_WEIGHT, y0, simulation_years=2)
+
     # Set up parameters
     local_pars = pars.copy()
 
     def custom_odde(t, y, pars_npa):
         pars_dict = dict(zip(pars.keys(), pars_npa))
 
-        if t < PRE_TREATMENT_DAYS:  # First 10 years - pre-treatment phase
-            pars_dict["intake_i"] = pre_calories
-        else:  # Treatment phase
-            days_in_treatment = t - PRE_TREATMENT_DAYS
-            if days_in_treatment <= CALORIE_REDUCTION_RAMP_DAYS:  # 2-month ramp up
-                ramp_factor = days_in_treatment / CALORIE_REDUCTION_RAMP_DAYS  # Linear ramp from 0 to 1
-                calorie_reduction = (pre_calories - treatment_calories) * ramp_factor
-                pars_dict["intake_i"] = pre_calories - calorie_reduction
-            else:  # Full treatment
-                pars_dict["intake_i"] = treatment_calories
+        if t <= CALORIE_REDUCTION_RAMP_DAYS:  # 2-month ramp up
+            ramp_factor = t / CALORIE_REDUCTION_RAMP_DAYS  # Linear ramp from 0 to 1
+            pars_dict["intake_i"] = initial_calories - (initial_calories - final_calories) * ramp_factor
+        else:  # Full treatment
+            pars_dict["intake_i"] = final_calories
 
-        return odde(t, y, np.array(list(pars_dict.values())), pre_treatment_years=10, treatment_years=2)
+        return odde(t, y, np.array(list(pars_dict.values())), pre_treatment_years=0, treatment_years=2)
 
     # Run simulation
     sol = solve_ivp(custom_odde, t_span, y0, method="LSODA", t_eval=t_eval, args=(np.array(list(local_pars.values())),))
@@ -80,30 +83,30 @@ def simulate_step_trial(
     # Print values at key timepoints
     variables = ["Glucose", "Insulin", "FFA", "Si", "Beta", "Sigma", "Inflammation", "BMI", "Weight (kg)"]
 
-    # Initial values (t=0) - only print once
-    if not initial_values_printed:
-        print("\nInitial values:")
-        for var, val in zip(variables[:-1], [y[0] for y in sol.y[:-2]]):  # Exclude height and age
-            print(f"{var:12}: {val:.2f}")
-        print(f"{'Weight (kg)':12}: {weights[0]:.2f}")
-        initial_values_printed = True
+    # Initial values (t=0)
+    print("\nInitial values:")
+    for var, val in zip(variables[:-1], [y[0] for y in sol.y[:-2]]):  # Exclude height and age
+        print(f"{var:12}: {val:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[0]:.2f}")
 
-    # Post pre-treatment (t=3650, 10 years)
-    print("\nPost pre-treatment (10 years):")
-    idx_10y = PRE_TREATMENT_DAYS
+    # Post ramp-up (2 months)
+    print("\nPost ramp-up (2 months):")
+    idx_2m = CALORIE_REDUCTION_RAMP_DAYS
     for var, vals in zip(variables[:-1], sol.y[:-2]):  # Exclude height and age
-        print(f"{var:12}: {vals[idx_10y]:.2f}")
-    print(f"{'Weight (kg)':12}: {weights[idx_10y]:.2f}")
+        print(f"{var:12}: {vals[idx_2m]:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[idx_2m]:.2f}")
 
-    # Final values (t=4380, 12 years)
-    print("\nPost treatment (12 years):")
-    idx_12y = -1
+    # Final values (2 years)
+    print("\nFinal values (2 years):")
+    idx_final = -1
     for var, vals in zip(variables[:-1], sol.y[:-2]):  # Exclude height and age
-        print(f"{var:12}: {vals[idx_12y]:.2f}")
-    print(f"{'Weight (kg)':12}: {weights[idx_12y]:.2f}")
+        print(f"{var:12}: {vals[idx_final]:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[idx_final]:.2f}")
 
     # Calculate DPI at final timepoint
-    dpi = 1 - (sol.y[3][idx_12y] * sol.y[4][idx_12y] * sol.y[5][idx_12y]) / (sol.y[3][0] * sol.y[4][0] * sol.y[5][0])
+    dpi = 1 - (sol.y[3][idx_final] * sol.y[4][idx_final] * sol.y[5][idx_final]) / (
+        sol.y[3][0] * sol.y[4][0] * sol.y[5][0]
+    )
     print(f"{'DPI':12}: {dpi:.2f}")
 
     return sol
@@ -130,7 +133,6 @@ def plot_step_results():
 
     # Add subplot labels
     letter = string.ascii_uppercase
-    trans = mtransforms.ScaledTranslation(-20 / 72, 7 / 72, fig.dpi_scale_trans)
 
     # Set y-limits and labels for each subplot
     for i in range(len(axs) - 1):
@@ -146,12 +148,8 @@ def plot_step_results():
         )
         axs[i].tick_params(axis="both", which="major", labelsize=10)
 
-    # STEP trial caloric patterns (example values - adjust based on your calculations)
-    pre_calories = 3500  # Estimated maintenance calories for BMI 38.6
-    treatment_calories = pre_calories * 0.839  # 16.1% reduction
-
     # Run simulation and plot results
-    sol = simulate_step_trial(pre_calories, treatment_calories)
+    sol = simulate_step_trial()
     years = sol.t / 365
 
     # Plot each variable
