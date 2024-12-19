@@ -56,6 +56,9 @@ def simulate_step_trial(initial_weight=INITIAL_WEIGHT, height=INITIAL_HEIGHT, ag
     # Calculate equilibrium calories for initial and final weights
     initial_calories, _ = find_equilibrium_calories(initial_weight, y0, simulation_years=5)
     final_calories, _ = find_equilibrium_calories(FINAL_WEIGHT, y0, simulation_years=2)
+    print(
+        f"Original calorie consumption: {initial_calories:.0f}, Post treatment calorie consumption: {final_calories:.0f}"
+    )
 
     # Set up parameters
     local_pars = pars.copy()

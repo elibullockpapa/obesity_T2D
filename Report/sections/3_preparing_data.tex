@@ -43,17 +43,18 @@ This process yielded the following caloric requirements:
 
 \begin{table}[!htb]
 \centering
-\begin{tabular}{|l|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
-\textbf{BMI Group} & \textbf{Target BMI} & \textbf{Target Weight (kg)} & \textbf{Pre-Treatment} & \textbf{Treatment} \\
+\textbf{BMI Group} & \textbf{Initial} & \textbf{Initial} & \textbf{Final} & \textbf{Final} & \textbf{Weight} \\
+& \textbf{Weight (kg)} & \textbf{Calories} & \textbf{Weight (kg)} & \textbf{Calories} & \textbf{Change (\%)} \\
 \hline
-BMI $<$30 & 28.0 & 90.7 & 2,797 & 2,503 \\
-BMI 30-35 & 32.5 & 105.3 & 3,266 & 2,881 \\
-BMI 35-40 & 37.5 & 121.5 & 3,754 & 3,303 \\
-BMI $\geq$40 & 42.0 & 136.1 & 4,203 & 3,689 \\
+BMI $<$30 & 76.2 & 2,353 & 68.2 & 2,098 & -10.5 \\
+BMI 30-35 & 88.5 & 2,730 & 78.0 & 2,401 & -11.8 \\
+BMI 35-40 & 102.1 & 3,152 & 89.8 & 2,766 & -12.0 \\
+BMI $\geq$40 & 114.3 & 3,530 & 100.4 & 3,091 & -12.2 \\
 \hline
 \end{tabular}
-\caption{Daily caloric requirements by BMI category}
+\caption{SELECT Trial Analysis Results (Pre-treatment: 7 years, Treatment: 4 years)}
 \end{table}
 
 When we simulate the model with these caloric requirements, we get the following weight trajectories:
@@ -77,7 +78,7 @@ To accurately model the gradual onset of Wegovy's appetite-suppressing effects, 
 where:
 \begin{itemize}
     \item $t_{\text{start}}$ = 1825 days (5-year pre-treatment period)
-    \item $t_{\text{ramp}}$ = 365 days (1-year ramp-up duration)
+    \item $t_{\text{ramp}}$ = 60 days (2-month ramp-up duration)
 \end{itemize}
 
 The caloric adjustment is then applied using:

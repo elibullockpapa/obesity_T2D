@@ -4,29 +4,130 @@ from scipy.integrate import solve_ivp
 from model_with_wegovy import pars, odde
 import string
 import matplotlib.transforms as mtransforms
+from find_caloric_intake_in_trial import find_equilibrium_calories
 
 initial_values_printed = False
 
+# Simulation time periods (in days)
+PRE_TREATMENT_DAYS = 1825  # 5 years
+TREATMENT_DAYS = 1460  # 4 years
+TOTAL_DAYS = PRE_TREATMENT_DAYS + TREATMENT_DAYS
+CALORIE_REDUCTION_RAMP_DAYS = 60  # 2 months
 
-def calculate_maintenance_calories(weight_kg, height_m, age=30, sex=1, activity_factor=1.2):
-    """Calculate maintenance calories using Mifflin-St Jeor equation"""
-    height_cm = height_m * 100
-    if sex == 1:  # male
-        bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5
-    else:  # female
-        bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 161
-    return bmr * activity_factor
+# Initial values from default model
+INITIAL_GLUCOSE = 94.1  # mg/dl
+INITIAL_INSULIN = 9.6  # μU/ml
+INITIAL_FFA = 404  # μmol/l
+INITIAL_SI = 0.8  # ml/μU/day
+INITIAL_BETA = 1009  # mg
+INITIAL_SIGMA = 530  # μU/mg/day
+INITIAL_INFLAMMATION = 0.056  # dimensionless
+INITIAL_HEIGHT = 1.8  # m
+INITIAL_AGE = 30  # years
+
+# Update the initial values to be dictionaries based on BMI category
+INITIAL_VALUES = {
+    "<30": {
+        "glucose": 96.21,
+        "insulin": 10.43,
+        "ffa": 424.02,
+        "si": 0.70,
+        "beta": 1010.12,
+        "sigma": 541.97,
+        "inflammation": 0.11,
+    },
+    "30-35": {
+        "glucose": 102.73,
+        "insulin": 12.75,
+        "ffa": 481.58,
+        "si": 0.50,
+        "beta": 1011.75,
+        "sigma": 562.44,
+        "inflammation": 0.22,
+    },
+    "35-40": {
+        "glucose": 112.93,
+        "insulin": 15.19,
+        "ffa": 565.77,
+        "si": 0.33,
+        "beta": 1010.04,
+        "sigma": 540.27,
+        "inflammation": 0.40,
+    },
+    "≥40": {
+        "glucose": 122.40,
+        "insulin": 15.60,
+        "ffa": 642.29,
+        "si": 0.26,
+        "beta": 1006.71,
+        "sigma": 470.42,
+        "inflammation": 0.57,
+    },
+}
 
 
-def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initial_weight=81):
+def calculate_target_weights(height_m):
+    """Calculate target weights for each BMI category"""
+    bmi_targets = {
+        "<30": 28.0,  # Middle of normal/overweight
+        "30-35": 32.5,  # Middle of class I obesity
+        "35-40": 37.5,  # Middle of class II obesity
+        "≥40": 42.0,  # Representative of class III obesity
+    }
+
+    # Calculate post-treatment weights based on reported reductions
+    weight_reductions = {"<30": -0.1052, "30-35": -0.1179, "35-40": -0.1201, "≥40": -0.1223}
+
+    results = {}
+    for category, target_bmi in bmi_targets.items():
+        initial_weight = target_bmi * (height_m**2)
+        final_weight = initial_weight * (1 + weight_reductions[category])
+
+        results[category] = {
+            "initial_bmi": target_bmi,
+            "initial_weight": initial_weight,
+            "final_weight": final_weight,
+            "final_bmi": final_weight / (height_m**2),
+            "reduction": weight_reductions[category],
+        }
+
+    return results
+
+
+def simulate_bmi_category(bmi_category, initial_weight):
     """Simulate a specific BMI category with pre-treatment and treatment phases"""
     global initial_values_printed
 
-    t_span = [0, 2555]  # 7 years total (5 years pre + 2 years treatment)
-    t_eval = np.linspace(0, 2555, 2556)  # daily points
+    t_span = [0, TOTAL_DAYS]
+    t_eval = np.linspace(0, TOTAL_DAYS, TOTAL_DAYS + 1)  # daily points
 
-    # Initial conditions [g, i, ffa, si, b, sigma, infl, w]
-    y0 = [94.1, 9.6, 404, 0.8, 1009, 530, 0.056, initial_weight]
+    # Get the correct initial values based on BMI category
+    category_key = "≥40" if bmi_category == "BMI ≥40" else bmi_category.replace("BMI ", "")
+    initial_vals = INITIAL_VALUES[category_key]
+
+    # Initial conditions [g, i, ffa, si, b, sigma, infl, w, height, age]
+    y0 = [
+        initial_vals["glucose"],
+        initial_vals["insulin"],
+        initial_vals["ffa"],
+        initial_vals["si"],
+        initial_vals["beta"],
+        initial_vals["sigma"],
+        initial_vals["inflammation"],
+        initial_weight,
+        INITIAL_HEIGHT,
+        INITIAL_AGE,
+    ]
+
+    # Get weight targets from the helper function
+    targets = calculate_target_weights(INITIAL_HEIGHT)
+    category_key = "≥40" if bmi_category == "BMI ≥40" else bmi_category.replace("BMI ", "")
+    target_data = targets[category_key]
+    final_weight = target_data["final_weight"]
+
+    # Calculate equilibrium calories for initial and treatment phases
+    initial_calories, _ = find_equilibrium_calories(initial_weight, y0, simulation_years=5)
+    treatment_calories, _ = find_equilibrium_calories(final_weight, y0, simulation_years=4)
 
     # Set up parameters
     local_pars = pars.copy()
@@ -34,18 +135,18 @@ def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initia
     def custom_odde(t, y, pars_npa):
         pars_dict = dict(zip(pars.keys(), pars_npa))
 
-        if t < 1825:  # First 5 years - weight gain phase
-            pars_dict["intake_i"] = pre_calories
+        if t < PRE_TREATMENT_DAYS:  # Pre-treatment phase
+            pars_dict["intake_i"] = initial_calories
         else:  # Treatment phase
-            days_in_treatment = t - 1825
-            if days_in_treatment <= 60:  # 2-month ramp up
-                ramp_factor = days_in_treatment / 60  # Linear ramp from 0 to 1
-                calorie_reduction = (pre_calories - treatment_calories) * ramp_factor
-                pars_dict["intake_i"] = pre_calories - calorie_reduction
-            else:  # Full treatment
+            days_in_treatment = t - PRE_TREATMENT_DAYS
+            if days_in_treatment <= CALORIE_REDUCTION_RAMP_DAYS:
+                ramp_factor = days_in_treatment / CALORIE_REDUCTION_RAMP_DAYS
+                calorie_reduction = (initial_calories - treatment_calories) * ramp_factor
+                pars_dict["intake_i"] = initial_calories - calorie_reduction
+            else:
                 pars_dict["intake_i"] = treatment_calories
 
-        return odde(t, y, np.array(list(pars_dict.values())), pre_treatment_years=5, treatment_years=2)
+        return odde(t, y, np.array(list(pars_dict.values())), pre_treatment_years=5, treatment_years=4)
 
     # Run simulation
     sol = solve_ivp(custom_odde, t_span, y0, method="LSODA", t_eval=t_eval, args=(np.array(list(local_pars.values())),))
@@ -53,8 +154,8 @@ def simulate_bmi_category(bmi_category, pre_calories, treatment_calories, initia
     # Store weight before BMI conversion
     weights = sol.y[7].copy()
 
-    # Convert weight to BMI
-    sol.y[7] = sol.y[7] / (pars["height"] ** 2)
+    # Convert weight to BMI using INITIAL_HEIGHT
+    sol.y[7] = sol.y[7] / (INITIAL_HEIGHT**2)
 
     # Print values at key timepoints
     variables = ["Glucose", "Insulin", "FFA", "Si", "Beta", "Sigma", "Inflammation", "BMI", "Weight (kg)"]
@@ -146,19 +247,19 @@ def plot_trial_results():
         if i == 7:
             axs[i].set_ylim([20, 45])
 
-    # BMI categories and their caloric patterns from outline.txt
+    # BMI categories and their initial weights
     scenarios = {
-        "BMI <30": {"pre_calories": 2797, "treatment_calories": 2797 * 0.8948},
-        "BMI 30-35": {"pre_calories": 3266, "treatment_calories": 3266 * 0.8821},
-        "BMI 35-40": {"pre_calories": 3754, "treatment_calories": 3754 * 0.8799},
-        "BMI ≥40": {"pre_calories": 4203, "treatment_calories": 4203 * 0.8777},
+        "BMI <30": {"initial_weight": 90.72},  # BMI 28 at height 1.8m
+        "BMI 30-35": {"initial_weight": 105.3},  # BMI 32.5
+        "BMI 35-40": {"initial_weight": 121.5},  # BMI 37.5
+        "BMI ≥40": {"initial_weight": 136.08},  # BMI 42
     }
 
     colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
 
     # Run simulations and plot results
     for (label, scenario), color in zip(scenarios.items(), colors):
-        sol = simulate_bmi_category(label, scenario["pre_calories"], scenario["treatment_calories"])
+        sol = simulate_bmi_category(label, scenario["initial_weight"])
         years = sol.t / 365
 
         # Plot each variable with consistent styling
