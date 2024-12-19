@@ -25,7 +25,7 @@ INITIAL_INFLAMMATION = 0.056  # dimensionless
 INITIAL_HEIGHT = 1.8  # m
 INITIAL_AGE = 30  # years
 
-# Update the initial values to be dictionaries based on BMI category
+# Update the initial values to be dictionaries based on BMI category in STASIS trial
 INITIAL_VALUES = {
     "<30": {
         "glucose": 96.21,

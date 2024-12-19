@@ -19,15 +19,20 @@ INITIAL_WEIGHT = 105.6  # kg (default is 81)
 INITIAL_HEIGHT = 1.65  # m (default is 1.8)
 INITIAL_AGE = 47.3  # years (default is 30)
 
-# Initial values from default model
-INITIAL_FFA = 400  # μmol/l
-INITIAL_SI = 0.8  # ml/μU/day
-INITIAL_BETA = 1009  # mg
-INITIAL_SIGMA = 530  # μU/mg/day
-INITIAL_INFLAMMATION = 0.056  # dimensionless
+# Values that fit the model after 2 weeks (default values in parentheses)
+# These values were not measured in the trial, so we fit them to the model
+INITIAL_FFA = 688.65  # μmol/l (was 400)
+INITIAL_SI = 0.26  # ml/μU/day (was 0.8)
+INITIAL_BETA = 1009  # mg (unchanged)
+INITIAL_SIGMA = 501.64  # μU/mg/day (was 530)
+INITIAL_INFLAMMATION = 0.45  # dimensionless (was 0.056)
 
-# Post treatment weight
-FINAL_WEIGHT = 87.9  # kg
+# Post treatment values measured in STEP trial
+FINAL_WEIGHT = INITIAL_WEIGHT * (1 - 0.152)  # kg (-15.2%)
+FINAL_GLUCOSE = INITIAL_GLUCOSE - 7.2  # mg/dl (-0.4 mmol/L)
+FINAL_INSULIN = INITIAL_INSULIN * (1 - 0.327)  # μU/ml (-32.7%)
+FINAL_FFA = INITIAL_FFA * 1.003  # μmol/l (+0.3%)
+FINAL_INFLAMMATION = INITIAL_INFLAMMATION * (1 - 0.567)  # dimensionless (-56.7%)
 
 initial_values_printed = False
 
@@ -91,6 +96,13 @@ def simulate_step_trial(initial_weight=INITIAL_WEIGHT, height=INITIAL_HEIGHT, ag
     for var, val in zip(variables[:-1], [y[0] for y in sol.y[:-2]]):  # Exclude height and age
         print(f"{var:12}: {val:.2f}")
     print(f"{'Weight (kg)':12}: {weights[0]:.2f}")
+
+    # After 2 weeks
+    print("\nValues after 2 weeks:")
+    idx_2w = 14  # 14 days
+    for var, vals in zip(variables[:-1], sol.y[:-2]):  # Exclude height and age
+        print(f"{var:12}: {vals[idx_2w]:.2f}")
+    print(f"{'Weight (kg)':12}: {weights[idx_2w]:.2f}")
 
     # Post ramp-up (2 months)
     print("\nPost ramp-up (2 months):")
@@ -157,7 +169,25 @@ def plot_step_results():
 
     # Plot each variable
     for i in range(8):
-        axs[i].plot(years, sol.y[i], c="#1f77b4", label="STEP 5")
+        axs[i].plot(years, sol.y[i], c="#1f77b4", label="Simulation")
+
+        # Add measured initial and final points where available
+        if i == 0:  # Glucose
+            axs[i].scatter(0, INITIAL_GLUCOSE, c="red", label="Measured")
+            axs[i].scatter(2, FINAL_GLUCOSE, c="red")
+        elif i == 1:  # Insulin
+            axs[i].scatter(0, INITIAL_INSULIN, c="red")
+            axs[i].scatter(2, FINAL_INSULIN, c="red")
+        elif i == 2:  # FFA
+            axs[i].scatter(2, FINAL_FFA, c="red")
+        elif i == 6:  # Inflammation
+            axs[i].scatter(2, FINAL_INFLAMMATION, c="red")
+        elif i == 7:  # BMI
+            initial_bmi = INITIAL_WEIGHT / (INITIAL_HEIGHT**2)
+            final_bmi = FINAL_WEIGHT / (INITIAL_HEIGHT**2)
+            axs[i].scatter(0, initial_bmi, c="red")
+            axs[i].scatter(2, final_bmi, c="red")
+
         axs[i].set_xlabel("Time (years)", size="medium")
         axs[i].set_ylabel(vn[i], size="medium", labelpad=2)
 
@@ -167,15 +197,23 @@ def plot_step_results():
     axs[8].set_xlabel("Time (years)", size="medium")
     axs[8].set_ylabel("DPI", size="medium", labelpad=2)
 
-    # Add legend
-    axs[0].legend(fontsize="small", framealpha=0.5, loc="best")
+    # Add a single legend above all subplots
+    fig.legend(
+        ["Simulation", "Measured"],
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.98),
+        ncol=2,
+        fontsize="small",
+        framealpha=0.5,
+    )
 
-    # Add reference lines to glucose plot
-    axs[0].hlines(y=[100, 125], xmin=0, xmax=max(years), linestyles=":", colors=["k", "r"], linewidth=0.8)
-
-    # Match figure size and layout adjustments
+    # First apply tight_layout
     fig.tight_layout()
-    fig.subplots_adjust(top=0.88, bottom=0.09, left=0.08, right=0.98, hspace=0.6, wspace=0.45)
+
+    # Then adjust the top margin for the legend
+    # Values between 0 and 1, where 0.9 means 90% of height is for plots
+    fig.subplots_adjust(top=0.85)
+
     fig.set_size_inches([8.5, 5.7])
 
     plt.show()
